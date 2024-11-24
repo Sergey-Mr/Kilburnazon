@@ -8,6 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
     $email = $_POST['email'];
     $password = $_POST['password'];
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     // Check if email already exists
     $checkEmailStmt = $connection->prepare("SELECT email FROM userdata WHERE email = ?");
@@ -21,10 +22,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         // Prepare and bind
         $stmt = $connection->prepare("INSERT INTO userdata (username, email, password) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $username, $email, $password);
+        $stmt->bind_param("sss", $username, $email, $hashed_password);
 
         if ($stmt->execute()) {
             $message = "Account created successfully";
+            session_start();
+            $_SESSION['email'] = $email;
+            header("Location: dashboard.php");
+            
             $toastClass = "#28a745"; // Success color
         } else {
             $message = "Error: " . $stmt->error;
