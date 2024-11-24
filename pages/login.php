@@ -19,6 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->fetch();
 
         if (password_verify($password, $db_password)) {
+        //if ($password == $db_password) {
             $message = "Login successful";
             $toastClass = "bg-success";
             // Start the session and redirect to the dashboard or home page

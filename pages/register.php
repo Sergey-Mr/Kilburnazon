@@ -24,21 +24,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if ($checkEmailStmt->num_rows > 0) {
             $message = "Email ID already exists";
-            $toastClass = "#dc3545"; // Primary color
+            $toastClass = "#dc3545"; // Danger color
         } else {
             // Check if username already exists
-            $checkUsernameStmt = $connection->prepare("SELECT username FROM userdata WHERE username = ?");
-            $checkUsernameStmt->bind_param("s", $username);
-            $checkUsernameStmt->execute();
-            $checkUsernameStmt->store_result();
+            //$checkUsernameStmt = $connection->prepare("SELECT username FROM userdata WHERE username = ?");
+            //$checkUsernameStmt->bind_param("s", $username);
+            //$checkUsernameStmt->execute();
+            //$checkUsernameStmt->store_result();
 
-            if ($checkUsernameStmt->num_rows > 0) {
+            //if ($checkUsernameStmt->num_rows > 0) {
+            if (False){
                 $message = "Username already exists";
-                $toastClass = "#dc3545"; // Primary color
+                $toastClass = "#dc3545"; // Danger color
             } else {
                 // Prepare and bind
-                $stmt = $connection->prepare("INSERT INTO userdata (username, email, password) VALUES (?, ?, ?)");
-                $stmt->bind_param("sss", $username, $email, $hashed_password);
+                $stmt = $connection->prepare("INSERT INTO userdata (email, password) VALUES (?, ?)");
+                $stmt->bind_param("ss", $email, $hashed_password); // Fix: Use "ss" instead of "sss"
 
                 if ($stmt->execute()) {
                     $message = "Account created successfully";
