@@ -8,38 +8,59 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
     $email = $_POST['email'];
     $password = $_POST['password'];
-    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-    // Check if email already exists
-    $checkEmailStmt = $connection->prepare("SELECT email FROM userdata WHERE email = ?");
-    $checkEmailStmt->bind_param("s", $email);
-    $checkEmailStmt->execute();
-    $checkEmailStmt->store_result();
-
-    if ($checkEmailStmt->num_rows > 0) {
-        $message = "Email ID already exists";
-        $toastClass = "#007bff"; // Primary color
+    // Validate email
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $message = "Invalid email format";
+        $toastClass = "#ffc107"; // Warning color
     } else {
-        // Prepare and bind
-        $stmt = $connection->prepare("INSERT INTO userdata (username, email, password) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $username, $email, $hashed_password);
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-        if ($stmt->execute()) {
-            $message = "Account created successfully";
-            session_start();
-            $_SESSION['email'] = $email;
-            header("Location: dashboard.php");
-            
-            $toastClass = "#28a745"; // Success color
+        // Check if email already exists
+        $checkEmailStmt = $connection->prepare("SELECT email FROM userdata WHERE email = ?");
+        $checkEmailStmt->bind_param("s", $email);
+        $checkEmailStmt->execute();
+        $checkEmailStmt->store_result();
+
+        if ($checkEmailStmt->num_rows > 0) {
+            $message = "Email ID already exists";
+            $toastClass = "#dc3545"; // Primary color
         } else {
-            $message = "Error: " . $stmt->error;
-            $toastClass = "#dc3545"; // Danger color
+            // Check if username already exists
+            $checkUsernameStmt = $connection->prepare("SELECT username FROM userdata WHERE username = ?");
+            $checkUsernameStmt->bind_param("s", $username);
+            $checkUsernameStmt->execute();
+            $checkUsernameStmt->store_result();
+
+            if ($checkUsernameStmt->num_rows > 0) {
+                $message = "Username already exists";
+                $toastClass = "#dc3545"; // Primary color
+            } else {
+                // Prepare and bind
+                $stmt = $connection->prepare("INSERT INTO userdata (username, email, password) VALUES (?, ?, ?)");
+                $stmt->bind_param("sss", $username, $email, $hashed_password);
+
+                if ($stmt->execute()) {
+                    $message = "Account created successfully";
+                    session_start();
+                    $_SESSION['email'] = $email;
+                    header("Location: dashboard.php");
+                    $toastClass = "#28a745"; // Success color
+                    exit();
+                } else {
+                    $message = "Error: " . $stmt->error;
+                    $toastClass = "#dc3545"; // Danger color
+                }
+
+                $stmt->close();
+            }
+
+            $checkUsernameStmt->close();
         }
 
-        $stmt->close();
+        $checkEmailStmt->close();
     }
 
-    $checkEmailStmt->close();
     $connection->close();
 }
 ?>
