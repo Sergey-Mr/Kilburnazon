@@ -50,12 +50,14 @@ if (!empty($_GET['start_date'])) {
 // Combine filters into a WHERE clause
 $whereClause = count($filters) > 0 ? 'WHERE ' . implode(' AND ', $filters) : '';
 
-$sql = "SELECT e.Employee_ID, e.Name, e.Email, e.Hired_Date, 
-               p.Role_Name AS Position, d.Name AS Department, o.Name AS Office
+$sql = "SELECT e.Employee_ID, e.Name, e.Email, e.DOB, e.Salary, e.Hired_Date, e.Contract_Type, e.NIN, e.Address, 
+               p.Role_Name AS Position, d.Name AS Department, o.Name AS Office,
+               ec.Contact_Name, ec.Relationship, ec.Phone
         FROM Employee e 
         LEFT JOIN Employee_Position p ON e.Position_ID = p.Position_ID 
         LEFT JOIN Department d ON e.Department_ID = d.Department_ID 
         LEFT JOIN Office o ON e.Office_ID = o.Office_ID
+        LEFT JOIN Emergency_Contact ec ON e.Emergency_Contact_ID = ec.Contact_ID
         $whereClause";
 
 $stmt = $connection->prepare($sql);
@@ -142,6 +144,9 @@ $employees = $result->fetch_all(MYSQLI_ASSOC);
                         <div class="col-md-4 mb-4">
                             <div class="card shadow">
                                 <div class="card-body">
+                                    <!-- Placeholder Image -->
+                                    <img src="photo_placeholder.png" alt="Employee Photo" class="card-img-top mb-3" style="height: 150px; object-fit: cover;">
+
                                     <h5 class="card-title"><?php echo htmlspecialchars($employee['Name'] ?? ''); ?></h5>
                                     <p class="card-text">
                                         <strong>Email:</strong> <?php echo htmlspecialchars($employee['Email']); ?><br>
@@ -150,7 +155,47 @@ $employees = $result->fetch_all(MYSQLI_ASSOC);
                                         <strong>Office:</strong> <?php echo htmlspecialchars($employee['Office'] ?? 'N/A'); ?><br>
                                         <strong>Hired Date:</strong> <?php echo htmlspecialchars($employee['Hired_Date']); ?>
                                     </p>
-                                    <a href="employee_details.php?id=<?php echo $employee['Employee_ID']; ?>" class="btn btn-primary">View Details</a>
+                                    <!-- Modal Trigger Button -->
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#employeeModal<?php echo $employee['Employee_ID']; ?>">
+                                        View Details
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Employee Modal -->
+                            <div class="modal fade" id="employeeModal<?php echo $employee['Employee_ID']; ?>" tabindex="-1" aria-labelledby="employeeModalLabel<?php echo $employee['Employee_ID']; ?>" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="employeeModalLabel<?php echo $employee['Employee_ID']; ?>">
+                                                <?php echo htmlspecialchars($employee['Name']); ?> - Details
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <!-- Employee Modal -->
+                                        <div class="modal-body">
+                                            <img src="photo_placeholder.png" alt="Employee Photo" class="card-img-top mb-3" style="height: 120px; width: 120px; object-fit: cover;">
+                                            <p><strong>Name:</strong> <?php echo htmlspecialchars($employee['Name']); ?></p>
+                                            <p><strong>Email:</strong> <?php echo htmlspecialchars($employee['Email']); ?></p>
+                                            <p><strong>Date of Birth:</strong> <?php echo htmlspecialchars($employee['DOB'] ?? 'N/A'); ?></p>
+                                            <p><strong>Address:</strong> <?php echo htmlspecialchars($employee['Address'] ?? 'N/A'); ?></p>
+                                            <p><strong>Position:</strong> <?php echo htmlspecialchars($employee['Position'] ?? 'N/A'); ?></p>
+                                            <p><strong>Department:</strong> <?php echo htmlspecialchars($employee['Department'] ?? 'N/A'); ?></p>
+                                            <p><strong>Office:</strong> <?php echo htmlspecialchars($employee['Office'] ?? 'N/A'); ?></p>
+                                            <p><strong>Salary:</strong> <?php echo htmlspecialchars($employee['Salary'] ?? 'N/A'); ?></p>
+                                            <p><strong>Hired Date:</strong> <?php echo htmlspecialchars($employee['Hired_Date']); ?></p>
+                                            <p><strong>Contract Type:</strong> <?php echo htmlspecialchars($employee['Contract_Type'] ?? 'N/A'); ?></p>
+
+                                            <!-- Emergency Contact Information -->
+                                            <p><strong>Emergency Contact Name:</strong> <?php echo htmlspecialchars($employee['Contact_Name'] ?? 'N/A'); ?></p>
+                                            <p><strong>Relationship:</strong> <?php echo htmlspecialchars($employee['Relationship'] ?? 'N/A'); ?></p>
+                                            <p><strong>Emergency Contact Phone:</strong> <?php echo htmlspecialchars($employee['Phone'] ?? 'N/A'); ?></p>
+
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
