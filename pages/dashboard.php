@@ -94,10 +94,20 @@ $employees = $result->fetch_all(MYSQLI_ASSOC);
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="collapsibleNavId">
-                <ul class="navbar-nav m-auto mt-2 mt-lg-0"></ul>
+                <ul class="navbar-nav m-auto mt-2 mt-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="dashboard.php">Employee Directory</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="add_employee.php">Add New Employee</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="promote_employee.php">Promote Employee</a>
+                    </li>
+                </ul>
                 <form class="d-flex my-2 my-lg-0">
                     <a href="./logout.php" class="btn btn-light my-2 my-sm-0" style="font-weight:bolder;color:green;">
-                        logout</a>
+                        Logout</a>
                 </form>
             </div>
         </div>
