@@ -18,6 +18,11 @@ $toastClass = '';
 $payroll_data = [];
 $total_net_pay = 0;
 
+$selected_time_period = isset($_POST['time_period']) ? $_POST['time_period'] : '';
+$selected_department_id = isset($_POST['department']) ? $_POST['department'] : '';
+$selected_role_id = isset($_POST['role']) ? $_POST['role'] : '';
+$selected_salary_range = isset($_POST['salary_range']) ? $_POST['salary_range'] : '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $time_period = $_POST['time_period'];
     $department_id = $_POST['department'];
@@ -197,21 +202,34 @@ if (isset($_POST['export_pdf'])) {
     <!-- Navbar -->
     <nav class="navbar navbar-expand-sm navbar-light bg-success">
         <div class="container">
-            <a class="navbar-brand text-white fw-bold" href="#">Dashboard</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <a class="navbar-brand" href="#" style="font-weight:bold; color:white;">Dashboard</a>
+            <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapsibleNavId" aria-controls="collapsibleNavId" aria-expanded="false"
+                aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link text-white" href="dashboard.php">Employee Directory</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="add_employee.php">Add Employee</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="payroll.php">Payroll Report</a></li>
+            <div class="collapse navbar-collapse" id="collapsibleNavId">
+                <ul class="navbar-nav m-auto mt-2 mt-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="dashboard.php">Employee Directory</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="payroll.php">Payroll</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="add_employee.php">Add New Employee</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="promote_employee.php">Promote Employee</a>
+                    </li>
                 </ul>
-                <a href="./logout.php" class="btn btn-light">Logout</a>
+                <form class="d-flex my-2 my-lg-0">
+                    <a href="./logout.php" class="btn btn-light my-2 my-sm-0" style="font-weight:bolder;color:green;">
+                        Logout</a>
+                </form>
             </div>
         </div>
     </nav>
-
     <!-- Content -->
     <div class="container mt-5">
         <h2>Payroll Report</h2>
@@ -226,9 +244,9 @@ if (isset($_POST['export_pdf'])) {
             <div class="mb-3">
                 <label for="time_period" class="form-label">Time Period</label>
                 <select name="time_period" id="time_period" class="form-control" required>
-                    <option value="monthly">Monthly</option>
-                    <option value="quarterly">Quarterly</option>
-                    <option value="annually">Annually</option>
+                    <option value="monthly" <?php echo $selected_time_period === 'monthly' ? 'selected' : ''; ?>>Monthly</option>
+                    <option value="quarterly" <?php echo $selected_time_period === 'quarterly' ? 'selected' : ''; ?>>Quarterly</option>
+                    <option value="annually" <?php echo $selected_time_period === 'annually' ? 'selected' : ''; ?>>Annually</option>
                 </select>
             </div>
             <div class="mb-3">
@@ -236,7 +254,10 @@ if (isset($_POST['export_pdf'])) {
                 <select name="department" id="department" class="form-control">
                     <option value="">Select Department</option>
                     <?php while ($dept = $departments_result->fetch_assoc()): ?>
-                        <option value="<?php echo $dept['Department_ID']; ?>"><?php echo $dept['Name']; ?></option>
+                        <option value="<?php echo $dept['Department_ID']; ?>" 
+                            <?php echo $dept['Department_ID'] == $selected_department_id ? 'selected' : ''; ?>>
+                            <?php echo $dept['Name']; ?>
+                        </option>
                     <?php endwhile; ?>
                 </select>
             </div>
@@ -245,13 +266,18 @@ if (isset($_POST['export_pdf'])) {
                 <select name="role" id="role" class="form-control">
                     <option value="">Select Role</option>
                     <?php while ($role = $roles_result->fetch_assoc()): ?>
-                        <option value="<?php echo $role['Position_ID']; ?>"><?php echo $role['Role_Name']; ?></option>
+                        <option value="<?php echo $role['Position_ID']; ?>" 
+                            <?php echo $role['Position_ID'] == $selected_role_id ? 'selected' : ''; ?>>
+                            <?php echo $role['Role_Name']; ?>
+                        </option>
                     <?php endwhile; ?>
                 </select>
             </div>
             <div class="mb-3">
                 <label for="salary_range" class="form-label">Salary Range</label>
-                <input type="text" name="salary_range" id="salary_range" class="form-control" placeholder="e.g., 20000-50000">
+                <input type="text" name="salary_range" id="salary_range" class="form-control" 
+                    placeholder="e.g., 20000-50000" value="<?php echo htmlspecialchars($selected_salary_range); ?>">
+
             </div>
             <button type="submit" class="btn btn-primary">Generate Report</button>
             

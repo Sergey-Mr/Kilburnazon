@@ -101,6 +101,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <a class="nav-link text-white" href="dashboard.php">Employee Directory</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link text-white" href="payroll.php">Payroll</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link text-white" href="add_employee.php">Add New Employee</a>
                     </li>
                     <li class="nav-item">
