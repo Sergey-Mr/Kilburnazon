@@ -37,18 +37,6 @@ if ($result && $row = $result->fetch_assoc()) {
     // Department not found or query failed
     $access = False;
 }
-
-// Count the number of pending leave requests
-$query = "SELECT COUNT(*) as pending_count FROM Vacation WHERE Status = 'pending'";
-$stmt = $connection->prepare($query);
-$stmt->execute();
-$result = $stmt->get_result();
-$pending_requests = 0;
-
-if ($result && $row = $result->fetch_assoc()) {
-    $pending_requests = $row['pending_count'];
-}
-
 ?>
 
 <nav class="navbar navbar-expand-sm navbar-light bg-success">
@@ -77,14 +65,6 @@ if ($result && $row = $result->fetch_assoc()) {
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-white" href="birthday_cards.php">Birthday Cards</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white" href="leave_management.php">
-                        Leave Requests 
-                        <?php if ($pending_requests > 0): ?>
-                            <span class="badge bg-danger"><?php echo $pending_requests; ?></span>
-                        <?php endif; ?>
-                    </a>
                 </li>
             <?php else: ?>
                 <!-- Options for when $access is false -->
