@@ -92,11 +92,16 @@ $selected_department_id = isset($_POST['department']) ? $_POST['department'] : '
 $selected_role_id = isset($_POST['role']) ? $_POST['role'] : '';
 $selected_salary_range = isset($_POST['salary_range']) ? $_POST['salary_range'] : '';
 
+$start_date = isset($_POST['start_date']) ? $_POST['start_date'] : '';
+$end_date = isset($_POST['end_date']) ? $_POST['end_date'] : '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $time_period = $_POST['time_period'];
-    $department_id = $_POST['department'];
-    $role_id = $_POST['role'];
-    $salary_range = $_POST['salary_range'];
+    $time_period = $_POST['time_period'] ?? '';
+    $start_date = $_POST['start_date'] ?? '';
+    $end_date = $_POST['end_date'] ?? '';
+    $department_id = $_POST['department'] ?? '';
+    $role_id = $_POST['role'] ?? '';
+    $salary_range = $_POST['salary_range'] ?? '';
 
     // Base query for payroll report
     $query = "
@@ -104,14 +109,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             e.Name, 
             d.Name AS Department, 
             p.Role_Name AS Job_Title, 
-            e.Salary AS Base_Salary
-        FROM Employee e
+            e.Salary AS Base_Salary, 
+            pr.Bonuses, 
+            pr.Incentives, 
+            pr.Allowances, 
+            pr.Taxes, 
+            pr.Insurance, 
+            pr.Retirement_Contributions, 
+            pr.Payroll_Date
+        FROM Payroll pr
+        LEFT JOIN Employee e ON pr.Employee_ID = e.Employee_ID
         LEFT JOIN Department d ON e.Department_ID = d.Department_ID
         LEFT JOIN Employee_Position p ON e.Position_ID = p.Position_ID
         WHERE 1=1
     ";
 
-    // Apply filters
+    // Apply time period filter
+    if ($time_period === 'custom') {
+        if (!empty($start_date) && !empty($end_date)) {
+            $query .= " AND pr.Payroll_Date BETWEEN '" . $connection->real_escape_string($start_date) . "' 
+                        AND '" . $connection->real_escape_string($end_date) . "'";
+        } else {
+            $message = "Please select both start and end dates for the custom range.";
+            $toastClass = 'bg-danger';
+        }
+    }
+
+    // Apply other filters
     if (!empty($department_id)) {
         $query .= " AND e.Department_ID = '" . $connection->real_escape_string($department_id) . "'";
     }
@@ -129,34 +153,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($result) {
         while ($row = $result->fetch_assoc()) {
-            $count++; // Increment employee count
             $base_salary = $row['Base_Salary'];
-            $total_base_salary += $base_salary; // Add to total base salary
-    
-            // Calculate other salary components and net pay (existing logic)...
-            $bonuses = round($base_salary * 0.10, 2);
-            $incentives = round($base_salary * 0.05, 2);
-            $allowances = round($base_salary * 0.08, 2);
-            $taxes = round($base_salary * 0.12, 2);
-            $insurance = round($base_salary * 0.07, 2);
-            $retirement = round($base_salary * 0.05, 2);
+            $bonuses = $row['Bonuses'];
+            $incentives = $row['Incentives'];
+            $allowances = $row['Allowances'];
+            $taxes = $row['Taxes'];
+            $insurance = $row['Insurance'];
+            $retirement = $row['Retirement_Contributions'];
             $net_pay = $base_salary + $bonuses + $incentives + $allowances - $taxes - $insurance - $retirement;
-    
-            $total_net_pay += $net_pay; // Add to total net pay
-    
-            // Add the row data to the payroll array (existing logic)...
+
+            $total_net_pay += $net_pay;
+            $total_base_salary += $base_salary;
+            $count++;
+
             $payroll_data[] = [
                 'Name' => $row['Name'],
                 'Department' => $row['Department'],
                 'Job_Title' => $row['Job_Title'],
-                'Base_Salary' => number_format($base_salary ?? 0, 2),
-                'Bonuses' => number_format($bonuses ?? 0, 2),
-                'Incentives' => number_format($incentives ?? 0, 2),
-                'Allowances' => number_format($allowances ?? 0, 2),
-                'Taxes' => number_format($taxes ?? 0, 2),
-                'Insurance' => number_format($insurance ?? 0, 2),
-                'Retirement_Contributions' => number_format($retirement ?? 0, 2),
+                'Base_Salary' => number_format($row['Base_Salary'] ?? 0, 2),
+                'Bonuses' => number_format($row['Bonuses'] ?? 0, 2),
+                'Incentives' => number_format($row['Incentives'] ?? 0, 2),
+                'Allowances' => number_format($row['Allowances'] ?? 0, 2),
+                'Taxes' => number_format($row['Taxes'] ?? 0, 2),
+                'Insurance' => number_format($row['Insurance'] ?? 0, 2),
+                'Retirement_Contributions' => number_format($row['Retirement_Contributions'] ?? 0, 2),
                 'Net_Pay' => number_format($net_pay ?? 0, 2),
+                'Payroll_Date' => $row['Payroll_Date'],
             ];
         }
     } else {
@@ -164,6 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $toastClass = 'bg-danger';
     }
 }
+
 if (isset($_POST['export_csv'])) {
     // Clear output buffering to prevent conflicts
     if (ob_get_length()) {
@@ -294,8 +317,16 @@ $average_net_pay = $count > 0 ? $total_net_pay / $count : 0;
                     <option value="monthly" <?php echo $selected_time_period === 'monthly' ? 'selected' : ''; ?>>Monthly</option>
                     <option value="quarterly" <?php echo $selected_time_period === 'quarterly' ? 'selected' : ''; ?>>Quarterly</option>
                     <option value="annually" <?php echo $selected_time_period === 'annually' ? 'selected' : ''; ?>>Annually</option>
+                    <option value="custom" <?php echo $selected_time_period === 'custom' ? 'selected' : ''; ?>>Custom</option>
                 </select>
             </div>
+            <div id="custom-date-range" class="mb-3" style="display: none;">
+                <label for="start_date" class="form-label">Start Date</label>
+                <input type="date" name="start_date" id="start_date" class="form-control" value="<?php echo htmlspecialchars($_POST['start_date'] ?? ''); ?>">
+                <label for="end_date" class="form-label">End Date</label>
+                <input type="date" name="end_date" id="end_date" class="form-control" value="<?php echo htmlspecialchars($_POST['end_date'] ?? ''); ?>">
+            </div>
+
             <div class="mb-3">
                 <label for="department" class="form-label">Department</label>
                 <select name="department" id="department" class="form-control">
@@ -397,3 +428,17 @@ $average_net_pay = $count > 0 ? $total_net_pay / $count : 0;
     </script>
 </body>
 </html>
+
+<script>
+    document.getElementById('time_period').addEventListener('change', function () {
+        const customRange = document.getElementById('custom-date-range');
+        if (this.value === 'custom') {
+            customRange.style.display = 'block';
+        } else {
+            customRange.style.display = 'none';
+        }
+    });
+
+    // Trigger change event on page load to ensure correct visibility
+    document.getElementById('time_period').dispatchEvent(new Event('change'));
+</script>
