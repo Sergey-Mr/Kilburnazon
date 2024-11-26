@@ -7,7 +7,73 @@ if (!isset($_SESSION['email'])) {
     exit();
 }
 
+
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+
 include '../database/db_connect.php';
+
+// Retrieve the logged-in user's role
+$email = $_SESSION['email'];
+$query = "
+    SELECT d.Name AS Department_Name
+    FROM Employee e
+    LEFT JOIN Department d ON e.Department_ID = d.Department_ID
+    WHERE e.Email = ?
+";
+$access = False; 
+$stmt = $connection->prepare($query);
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result && $row = $result->fetch_assoc()) {
+    $department_name = $row['Department_Name'];
+    if ($department_name == 'Executive') {
+        // User is not in the Executive department
+        $access = True;
+        echo `Executive`;
+    }
+} else {
+    // Department not found or query failed
+    $access = False;
+}
+
+// If access is False, redirect to request_leave.php
+if (!$access) {
+    header("Location: request_leave.php");
+    exit();
+}
+
+
+// Retrieve the logged-in user's role
+$email = $_SESSION['email'];
+$query = "
+    SELECT d.Name AS Department_Name
+    FROM Employee e
+    LEFT JOIN Department d ON e.Department_ID = d.Department_ID
+    WHERE e.Email = ?
+";
+
+$stmt = $connection->prepare($query);
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result && $row = $result->fetch_assoc()) {
+    $department_name = $row['Department_Name'];
+    if ($department_name !== 'Executive') {
+        // User is not in the Executive department
+        header("HTTP/1.1 403 Forbidden");
+        die("<h1>403 Forbidden</h1><p>You do not have permission to access this page.</p>");
+    }
+} else {
+    // Department not found or query failed
+    header("HTTP/1.1 403 Forbidden");
+    die("<h1>403 Forbidden</h1><p>Unable to verify your department.</p>");
+}
 
 // Fetch departments and roles
 $departments_result = $connection->query("SELECT Department_ID, Name FROM Department");
@@ -79,14 +145,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'Name' => $row['Name'],
                 'Department' => $row['Department'],
                 'Job_Title' => $row['Job_Title'],
-                'Base_Salary' => number_format($base_salary, 2),
-                'Bonuses' => number_format($bonuses, 2),
-                'Incentives' => number_format($incentives, 2),
-                'Allowances' => number_format($allowances, 2),
-                'Taxes' => number_format($taxes, 2),
-                'Insurance' => number_format($insurance, 2),
-                'Retirement_Contributions' => number_format($retirement, 2),
-                'Net_Pay' => number_format($net_pay, 2),
+                'Base_Salary' => number_format($base_salary ?? 0, 2),
+                'Bonuses' => number_format($bonuses ?? 0, 2),
+                'Incentives' => number_format($incentives ?? 0, 2),
+                'Allowances' => number_format($allowances ?? 0, 2),
+                'Taxes' => number_format($taxes ?? 0, 2),
+                'Insurance' => number_format($insurance ?? 0, 2),
+                'Retirement_Contributions' => number_format($retirement ?? 0, 2),
+                'Net_Pay' => number_format($net_pay ?? 0, 2),
             ];
         }
     } else {
@@ -200,39 +266,10 @@ if (isset($_POST['export_pdf'])) {
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-sm navbar-light bg-success">
-        <div class="container">
-            <a class="navbar-brand" href="#" style="font-weight:bold; color:white;">Dashboard</a>
-            <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapsibleNavId" aria-controls="collapsibleNavId" aria-expanded="false"
-                aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="collapsibleNavId">
-                <ul class="navbar-nav m-auto mt-2 mt-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="dashboard.php">Employee Directory</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="payroll.php">Payroll</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="add_employee.php">Add New Employee</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="promote_employee.php">Promote Employee</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="birthday_cards.php">Birthday Cards</a>
-                    </li>
-                </ul>
-                <form class="d-flex my-2 my-lg-0">
-                    <a href="./logout.php" class="btn btn-light my-2 my-sm-0" style="font-weight:bolder;color:green;">
-                        Logout</a>
-                </form>
-            </div>
-        </div>
-    </nav>
+    <?php
+    include '../pages/components/navbar.php';
+    ?>
+    
     <!-- Content -->
     <div class="container mt-5">
         <h2>Payroll Report</h2>

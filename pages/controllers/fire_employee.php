@@ -1,5 +1,6 @@
 <?php
-include '../database/db_connect.php';
+include '../../database/db_connect.php';
+
 session_start();
 echo $_SESSION['user_id'];
 
@@ -39,7 +40,7 @@ try {
     if ($stmt->affected_rows > 0) {
         $connection->commit();
         $_SESSION['message'] = "Employee fired successfully.";
-        header("Location: dashboard.php");
+        header("Location: ../dashboard.php");
         exit();
     } else {
         throw new Exception("No rows affected. Employee ID might not exist.");

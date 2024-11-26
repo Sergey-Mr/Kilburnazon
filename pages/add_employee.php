@@ -10,6 +10,38 @@ if (!isset($_SESSION['email'])) {
 // Include database connection
 include '../database/db_connect.php';
 
+// Retrieve the logged-in user's role
+$email = $_SESSION['email'];
+$query = "
+    SELECT d.Name AS Department_Name
+    FROM Employee e
+    LEFT JOIN Department d ON e.Department_ID = d.Department_ID
+    WHERE e.Email = ?
+";
+$access = False; 
+$stmt = $connection->prepare($query);
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result && $row = $result->fetch_assoc()) {
+    $department_name = $row['Department_Name'];
+    if ($department_name == 'Executive') {
+        // User is not in the Executive department
+        $access = True;
+        echo `Executive`;
+    }
+} else {
+    // Department not found or query failed
+    $access = False;
+}
+
+// If access is False, redirect to request_leave.php
+if (!$access) {
+    header("Location: request_leave.php");
+    exit();
+}
+
 // Fetch available positions, departments, and offices for the dropdowns
 $positions_result = $connection->query("SELECT Position_ID, Role_Name FROM Employee_Position");
 $departments_result = $connection->query("SELECT Department_ID, Name FROM Department");
@@ -94,39 +126,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar navbar-expand-sm navbar-light bg-success">
-        <div class="container">
-            <a class="navbar-brand" href="#" style="font-weight:bold; color:white;">Dashboard</a>
-            <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapsibleNavId" aria-controls="collapsibleNavId" aria-expanded="false"
-                aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="collapsibleNavId">
-                <ul class="navbar-nav m-auto mt-2 mt-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="dashboard.php">Employee Directory</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="payroll.php">Payroll</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="add_employee.php">Add New Employee</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="promote_employee.php">Promote Employee</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="birthday_cards.php">Birthday Cards</a>
-                    </li>
-                </ul>
-                <form class="d-flex my-2 my-lg-0">
-                    <a href="./logout.php" class="btn btn-light my-2 my-sm-0" style="font-weight:bolder;color:green;">
-                        Logout</a>
-                </form>
-            </div>
-        </div>
-    </nav>
+    <?php
+    include '../pages/components/navbar.php';
+    ?>
+    
 
     <div class="container mt-5">
         <!-- Display messages -->

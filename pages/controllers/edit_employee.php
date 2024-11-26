@@ -4,7 +4,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 session_start();
-include '../database/db_connect.php';
+include '../../database/db_connect.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Extract POST variables
@@ -102,6 +102,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
 
     // Redirect back to the dashboard or the edit page
-    header("Location: dashboard.php");
+    header("Location: ../dashboard.php");
     exit();
 }
