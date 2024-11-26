@@ -15,9 +15,6 @@ $positions_result = $connection->query("SELECT Position_ID, Role_Name FROM Emplo
 $departments_result = $connection->query("SELECT Department_ID, Name FROM Department");
 $offices_result = $connection->query("SELECT Office_ID, Name FROM Office");
 
-$message = "";
-$toastClass = '';
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Collect form data
     $name = $_POST['name'];
@@ -45,8 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($result->num_rows > 0) {
         // Email already exists
-        $message = "Error: The email address is already in use.";
-        $toastClass = '#dc3545'; // Red color for error
+        $_SESSION['error'] = "Error: The email address is already in use.";
     } else {
         // Prepare SQL to insert the new employee
         $sql = "INSERT INTO Employee (Name, Email, DOB, Position_ID, Salary, Department_ID, Office_ID, Contract_Type, NIN, Hired_Date) 
@@ -59,20 +55,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Now insert the emergency contact data
                 $employee_id = $stmt->insert_id; // Get the last inserted employee ID
 
+                // Insert the emergency contact
                 $sql_emergency_contact = "INSERT INTO Emergency_Contact (Employee_ID, Contact_Name, Phone, Relationship) 
                                           VALUES (?, ?, ?, ?)";
                 $stmt_emergency = $connection->prepare($sql_emergency_contact);
                 $stmt_emergency->bind_param('isss', $employee_id, $emergency_contact_name, $emergency_contact_phone, $emergency_contact_relationship);
                 $stmt_emergency->execute();
 
-                // Success message and green toast
-                $message = "New employee added successfully with emergency contact!";
-                $toastClass = '#28a745'; // Green color for success
+                // Get the newly created contact ID
+                $new_contact_id = $connection->insert_id;
+
+                // Update the Employee table with the new Emergency_Contact_ID
+                $update_employee_contact_id_query = "
+                    UPDATE Employee
+                    SET Emergency_Contact_ID = ?
+                    WHERE Employee_ID = ?";
+                $stmt_update_contact_id = $connection->prepare($update_employee_contact_id_query);
+                $stmt_update_contact_id->bind_param("ii", $new_contact_id, $employee_id);
+                $stmt_update_contact_id->execute();
+
+                // Success message
+                $_SESSION['message'] = "New employee added successfully with emergency contact!";
             }
         } catch (mysqli_sql_exception $e) {
             // Catch any other SQL exceptions and show an error message
-            $message = "Error: " . $e->getMessage();
-            $toastClass = '#dc3545'; // Red color for error
+            $_SESSION['error'] = "Error: " . $e->getMessage();
         }
     }
 }
@@ -87,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<nav class="navbar navbar-expand-sm navbar-light bg-success">
+    <nav class="navbar navbar-expand-sm navbar-light bg-success">
         <div class="container">
             <a class="navbar-brand" href="#" style="font-weight:bold; color:white;">Dashboard</a>
             <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse"
@@ -120,20 +127,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
     </nav>
+
     <div class="container mt-5">
+        <!-- Display messages -->
+        <?php
+            if (!empty($_SESSION['message'])) {
+                echo "<div class='alert alert-success'>" . $_SESSION['message'] . "</div>";
+                unset($_SESSION['message']);
+            }
+            if (!empty($_SESSION['error'])) {
+                echo "<div class='alert alert-danger'>" . $_SESSION['error'] . "</div>";
+                unset($_SESSION['error']);
+            }
+        ?>
+
         <h2>Add New Employee</h2>
-        <?php if ($message): ?>
-            <div class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true"
-                 style="background-color: <?php echo $toastClass; ?>;">
-                <div class="d-flex">
-                    <div class="toast-body">
-                        <?php echo $message; ?>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" 
-                            data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-            </div>
-        <?php endif; ?>
 
         <form action="add_employee.php" method="POST">
             <!-- Employee Details -->
@@ -214,5 +222,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" class="btn btn-primary mt-3">Add Employee</button>
         </form>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
 </body>
 </html>
