@@ -86,6 +86,9 @@ if ($result && $row = $result->fetch_assoc()) {
                         <?php endif; ?>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="absenteeism_report.php">Abstenteeims Report</a>
+                </li>
             <?php else: ?>
                 <!-- Options for when $access is false -->
                 <li class="nav-item">
