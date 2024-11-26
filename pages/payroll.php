@@ -12,6 +12,8 @@ if (!isset($_SESSION['email'])) {
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+require_once '../vendor/autoload.php';
+use TCPDF;
 
 include '../database/db_connect.php';
 
@@ -237,7 +239,11 @@ if (isset($_POST['export_csv'])) {
 }
 if (isset($_POST['export_pdf'])) {
     require_once('tcpdf/tcpdf.php'); // Adjust path as needed
-    
+
+    // Start output buffering to prevent errors being sent to the browser
+    ob_start();
+
+    // Initialize PDF object
     $pdf = new TCPDF();
     $pdf->AddPage();
     $pdf->SetFont('helvetica', '', 10);
@@ -262,28 +268,90 @@ if (isset($_POST['export_pdf'])) {
                 <th>Net Pay</th>
               </tr></thead><tbody>';
     
-    // Add data rows
+    $total_net_pay = 0;
+    $total_base_salary = 0;
+    $total_entries = count($payroll_data);
+
+    // Initialize averages to avoid undefined variables
+    $average_net_pay = 0;
+    $average_base_salary = 0;
+    
+    // Loop through each entry in payroll_data
     foreach ($payroll_data as $row) {
+        // Check if the necessary keys exist and are valid
+        $base_salary = isset($row['Base_Salary']) ? (float)$row['Base_Salary'] : 0;
+        $bonuses = isset($row['Bonuses']) ? (float)$row['Bonuses'] : 0;
+        $incentives = isset($row['Incentives']) ? (float)$row['Incentives'] : 0;
+        $allowances = isset($row['Allowances']) ? (float)$row['Allowances'] : 0;
+        $taxes = isset($row['Taxes']) ? (float)$row['Taxes'] : 0;
+        $insurance = isset($row['Insurance']) ? (float)$row['Insurance'] : 0;
+        $retirement_contrib = isset($row['Retirement_Contributions']) ? (float)$row['Retirement_Contributions'] : 0;
+        $net_pay = isset($row['Net_Pay']) ? (float)$row['Net_Pay'] : 0;
+
+        $formatted_base_salary = number_format((float)$row['Base_Salary'], 2, '.', ',');
+        $formatted_bonuses = number_format((float)$row['Bonuses'], 2, '.', ',');
+        $formatted_incentives = number_format((float)$row['Incentives'], 2, '.', ',');
+        $formatted_allowances = number_format((float)$row['Allowances'], 2, '.', ',');
+        $formatted_taxes = number_format((float)$row['Taxes'], 2, '.', ',');
+        $formatted_insurance = number_format((float)$row['Insurance'], 2, '.', ',');
+        $formatted_retirement_contributions = number_format((float)$row['Retirement_Contributions'], 2, '.', ',');
+        $formatted_net_pay = number_format((float)$row['Net_Pay'], 2, '.', ',');
+
+
+        // Add data rows to the HTML
         $html .= '<tr>
-                    <td>' . htmlspecialchars($row['Name']) . '</td>
-                    <td>' . htmlspecialchars($row['Department']) . '</td>
-                    <td>' . htmlspecialchars($row['Job_Title']) . '</td>
-                    <td>' . number_format($row['Base_Salary'], 2) . '</td>
-                    <td>' . number_format($row['Bonuses'], 2) . '</td>
-                    <td>' . number_format($row['Incentives'], 2) . '</td>
-                    <td>' . number_format($row['Allowances'], 2) . '</td>
-                    <td>' . number_format($row['Taxes'], 2) . '</td>
-                    <td>' . number_format($row['Insurance'], 2) . '</td>
-                    <td>' . number_format($row['Retirement_Contributions'], 2) . '</td>
-                    <td>' . number_format($row['Net_Pay'], 2) . '</td>
-                  </tr>';
+    <td>' . htmlspecialchars($row['Name'] ?? '') . '</td>
+    <td>' . htmlspecialchars($row['Department'] ?? '') . '</td>
+    <td>' . htmlspecialchars($row['Job_Title'] ?? '') . '</td>
+    <td>' . $formatted_base_salary . '</td>
+    <td>' . $formatted_bonuses . '</td>
+    <td>' . $formatted_incentives . '</td>
+    <td>' . $formatted_allowances . '</td>
+    <td>' . $formatted_taxes . '</td>
+    <td>' . $formatted_insurance . '</td>
+    <td>' . $formatted_retirement_contributions . '</td>
+    <td>' . $formatted_net_pay . '</td>
+</tr>';
+
+        // Sum the values for total calculations
+        $total_net_pay += $net_pay;
+        $total_base_salary += $base_salary;
     }
+
+    // Calculate averages (ensure division by zero doesn't happen)
+    if ($total_entries > 0) {
+        $average_net_pay = $total_net_pay / $total_entries;
+        $average_base_salary = $total_base_salary / $total_entries;
+    }
+
+    // Add total and average rows to the table
+    $html .= '<tr>
+                <td colspan="10" class="text-end"><strong>Total Net Pay:</strong></td>
+                <td><strong>' . number_format($total_net_pay, 2) . '</strong></td>
+              </tr>';
+    $html .= '<tr>
+                <td colspan="10" class="text-end"><strong>Average Base Salary:</strong></td>
+                <td><strong>' . number_format($average_base_salary, 2) . '</strong></td>
+              </tr>';
+    $html .= '<tr>
+                <td colspan="10" class="text-end"><strong>Average Net Pay:</strong></td>
+                <td><strong>' . number_format($average_net_pay, 2) . '</strong></td>
+              </tr>';
+    
     $html .= '</tbody></table>';
     
+    // Write the HTML to PDF
     $pdf->writeHTML($html, true, false, true, false, '');
+    
+    // Output the PDF
     $pdf->Output('payroll_report.pdf', 'D');
+    
+    // End the script execution to prevent further output
     exit();
 }
+
+
+
 
 $average_base_salary = $count > 0 ? $total_base_salary / $count : 0;
 $average_net_pay = $count > 0 ? $total_net_pay / $count : 0;
