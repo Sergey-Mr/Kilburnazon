@@ -312,7 +312,7 @@ $employees = $result->fetch_all(MYSQLI_ASSOC);
                                                         <?php endwhile; ?>
                                                     </select>
                                                 </div>
-                                                        
+              
                                                 <div class="mb-3">
                                                     <label for="salary" class="form-label">Salary</label>
                                                     <input type="number" class="form-control" name="salary" id="salary" value="<?php echo htmlspecialchars($employee['Salary'] ?? ''); ?>">
