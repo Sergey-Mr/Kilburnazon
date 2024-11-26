@@ -222,6 +222,9 @@ if (isset($_POST['export_pdf'])) {
                     <li class="nav-item">
                         <a class="nav-link text-white" href="promote_employee.php">Promote Employee</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="birthday_cards.php">Birthday Cards</a>
+                    </li>
                 </ul>
                 <form class="d-flex my-2 my-lg-0">
                     <a href="./logout.php" class="btn btn-light my-2 my-sm-0" style="font-weight:bolder;color:green;">

@@ -107,6 +107,9 @@ $employees = $result->fetch_all(MYSQLI_ASSOC);
                     <li class="nav-item">
                         <a class="nav-link text-white" href="promote_employee.php">Promote Employee</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="birthday_cards.php">Birthday Cards</a>
+                    </li>
                 </ul>
                 <form class="d-flex my-2 my-lg-0">
                     <a href="./logout.php" class="btn btn-light my-2 my-sm-0" style="font-weight:bolder;color:green;">
@@ -118,6 +121,15 @@ $employees = $result->fetch_all(MYSQLI_ASSOC);
 
     <div class="container mt-5">
         <h2>Welcome To Dashboard</h2>
+        
+        <?php if (isset($_SESSION['message'])): ?>
+            <div class="alert alert-success"><?php echo $_SESSION['message']; unset($_SESSION['message']); ?></div>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="alert alert-danger"><?php echo $_SESSION['error']; unset($_SESSION['error']); ?></div>
+        <?php endif; ?>
+
 
         <!-- Search Filters Section -->
         <div class="mt-5">
@@ -207,6 +219,11 @@ $employees = $result->fetch_all(MYSQLI_ASSOC);
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <!-- Fire Employee Button -->
+                                            <form method="post" action="fire_employee.php" onsubmit="return confirm('Are you sure you want to fire this employee?');">
+                                                <input type="hidden" name="employee_id" value="<?php echo $employee['Employee_ID']; ?>">
+                                                <button type="submit" class="btn btn-danger">Fire Employee</button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -222,3 +239,4 @@ $employees = $result->fetch_all(MYSQLI_ASSOC);
 </body>
 
 </html>
+

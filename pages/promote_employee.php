@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_employee'])) 
     </script>
 </head>
 <body>
-    <nav class="navbar navbar-expand-sm navbar-light bg-success">
+<nav class="navbar navbar-expand-sm navbar-light bg-success">
         <div class="container">
             <a class="navbar-brand" href="#" style="font-weight:bold; color:white;">Dashboard</a>
             <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse"
@@ -111,6 +111,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['promote_employee'])) 
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-white" href="promote_employee.php">Promote Employee</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="birthday_cards.php">Birthday Cards</a>
                     </li>
                 </ul>
                 <form class="d-flex my-2 my-lg-0">
