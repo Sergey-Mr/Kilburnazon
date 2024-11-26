@@ -186,6 +186,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $toastClass = 'bg-danger';
     }
 }
+if ($result->num_rows == 0) {
+    $message = "No payroll data found for the selected time period.";
+    $toastClass = 'bg-warning';
+}
 
 if (isset($_POST['export_csv'])) {
     // Clear output buffering to prevent conflicts
