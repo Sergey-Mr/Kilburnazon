@@ -83,6 +83,9 @@ $message = "";
 $toastClass = '';
 $payroll_data = [];
 $total_net_pay = 0;
+$total_base_salary = 0; // Total base salary
+$count = 0; // Number of employees
+
 
 $selected_time_period = isset($_POST['time_period']) ? $_POST['time_period'] : '';
 $selected_department_id = isset($_POST['department']) ? $_POST['department'] : '';
@@ -126,21 +129,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($result) {
         while ($row = $result->fetch_assoc()) {
+            $count++; // Increment employee count
             $base_salary = $row['Base_Salary'];
-
-            // Calculate percentages based on base salary
-            $bonuses = round($base_salary * 0.10, 2); // 10% Bonuses
-            $incentives = round($base_salary * 0.05, 2); // 5% Incentives
-            $allowances = round($base_salary * 0.08, 2); // 8% Allowances
-            $taxes = round($base_salary * 0.12, 2); // 12% Taxes
-            $insurance = round($base_salary * 0.07, 2); // 7% Insurance
-            $retirement = round($base_salary * 0.05, 2); // 5% Retirement Contributions
-
-            // Calculate Net Pay
+            $total_base_salary += $base_salary; // Add to total base salary
+    
+            // Calculate other salary components and net pay (existing logic)...
+            $bonuses = round($base_salary * 0.10, 2);
+            $incentives = round($base_salary * 0.05, 2);
+            $allowances = round($base_salary * 0.08, 2);
+            $taxes = round($base_salary * 0.12, 2);
+            $insurance = round($base_salary * 0.07, 2);
+            $retirement = round($base_salary * 0.05, 2);
             $net_pay = $base_salary + $bonuses + $incentives + $allowances - $taxes - $insurance - $retirement;
-            $total_net_pay += $net_pay;
-
-            // Append to payroll data
+    
+            $total_net_pay += $net_pay; // Add to total net pay
+    
+            // Add the row data to the payroll array (existing logic)...
             $payroll_data[] = [
                 'Name' => $row['Name'],
                 'Department' => $row['Department'],
@@ -254,6 +258,9 @@ if (isset($_POST['export_pdf'])) {
     exit();
 }
 
+$average_base_salary = $count > 0 ? $total_base_salary / $count : 0;
+$average_net_pay = $count > 0 ? $total_net_pay / $count : 0;
+
 ?>
 
 <!DOCTYPE html>
@@ -365,6 +372,14 @@ if (isset($_POST['export_pdf'])) {
                         <tr>
                             <td colspan="10" class="text-end"><strong>Total Net Pay:</strong></td>
                             <td><strong><?php echo number_format($total_net_pay, 2); ?></strong></td>
+                        </tr>
+                        <tr>
+                            <td colspan="10" class="text-end"><strong>Average Base Salary:</strong></td>
+                            <td><strong><?php echo number_format($average_base_salary, 2); ?></strong></td>
+                        </tr>
+                        <tr>
+                            <td colspan="10" class="text-end"><strong>Average Net Pay:</strong></td>
+                            <td><strong><?php echo number_format($average_net_pay, 2); ?></strong></td>
                         </tr>
                     </tbody>
                 </table>
