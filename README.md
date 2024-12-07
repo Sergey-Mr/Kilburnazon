@@ -1,7 +1,7 @@
-# Kilburnazon
+# StaffLink
 
 ## Overview
-Kilburnazon is an open-source web application developed using PHP and MySQL. It serves as an efficient solution for managing employee-related activities within an organization. This software provides a robust and user-friendly interface for handling employee directories, data management, leave requests, payroll reporting, and more.
+StaffLink is an open-source web application developed using PHP and MySQL. It serves as an efficient solution for managing employee-related activities within an organization. This software provides a robust and user-friendly interface for handling employee directories, data management, leave requests, payroll reporting, and more.
 
 ## Features
 
